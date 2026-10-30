@@ -1618,3 +1618,61 @@ def bootstrap_mle(y, B, rng):
 
     return np.asarray(bootstrap_estimates, dtype=float)
 
+# Step 26 - sampling_distribution
+def sampling_distribution(estimator, theta, N):
+    """
+    Calculate the exact sampling distribution of an estimator
+    for a Bernoulli coin with a fixed heads probability.
+
+    Parameters:
+        estimator: Function of observed counts (N1, N0).
+        theta: True probability of heads, between 0 and 1.
+        N: Number of independent coin flips.
+
+    Returns:
+        Tuple (values, pmf), both NumPy float arrays of length N + 1.
+    """
+
+    # Validate the number of observations.
+    if (
+        not isinstance(N, (int, np.integer))
+        or isinstance(N, (bool, np.bool_))
+        or N < 0
+    ):
+        raise ValueError("N must be a non-negative integer.")
+
+    # Validate the true heads probability.
+    theta = float(theta)
+
+    if not math.isfinite(theta) or not 0.0 <= theta <= 1.0:
+        raise ValueError("theta must be between 0 and 1.")
+
+    # Initialize the output arrays.
+    values = np.empty(N + 1, dtype=float)
+    pmf = np.empty(N + 1, dtype=float)
+
+    # Enumerate every possible number of heads.
+    for k in range(N + 1):
+
+        # Calculate the estimator using Python integer counts.
+        values[k] = float(estimator(int(k), int(N - k)))
+
+        # Calculate the exact binomial probability.
+        # Handle boundary probabilities explicitly.
+        if theta == 0.0:
+            pmf[k] = 1.0 if k == 0 else 0.0
+
+        elif theta == 1.0:
+            pmf[k] = 1.0 if k == N else 0.0
+
+        else:
+            # Direct calculation avoids unnecessary log/exp
+            # floating-point rounding errors.
+            pmf[k] = (
+                math.comb(N, k)
+                * (theta ** k)
+                * ((1.0 - theta) ** (N - k))
+            )
+
+    return values, pmf
+
