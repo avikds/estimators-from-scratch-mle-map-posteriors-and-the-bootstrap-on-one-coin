@@ -19,6 +19,8 @@ python scaffold.py
 - [x] **7.** log_loss
 - [x] **8.** black_swan_risk
 - [x] **9.** beta_logpdf
+- [x] **10.** beta_posterior
+- [x] **11.** log_evidence
 
 ---
 

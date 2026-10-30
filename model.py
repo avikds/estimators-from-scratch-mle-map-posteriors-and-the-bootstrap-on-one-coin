@@ -472,3 +472,104 @@ def beta_logpdf(theta, a, b):
 
     return log_density
 
+# Step 10 - beta_posterior
+def beta_posterior(N1, N0, a, b):
+    """
+    Update a Beta(a, b) prior using Bernoulli observations
+    and summarize the resulting posterior distribution.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First parameter of the Beta prior.
+        b: Second parameter of the Beta prior.
+
+    Returns:
+        Dictionary containing:
+            a: Updated first posterior parameter.
+            b: Updated second posterior parameter.
+            mean: Posterior mean.
+            mode: Posterior mode (MAP estimate), or None if undefined.
+            var: Posterior variance.
+            prior_weight: Weight assigned to the prior mean.
+    """
+
+    # Update the Beta parameters using the observed counts.
+    alpha = a + N1
+    beta = b + N0
+
+    # Total posterior concentration.
+    total = alpha + beta
+
+    # Calculate the posterior mean.
+    posterior_mean = float(alpha / total)
+
+    # Calculate the posterior mode using the previously
+    # implemented MAP estimator.
+    try:
+        posterior_mode = map_bernoulli(N1, N0, a, b)
+    except ValueError:
+        posterior_mode = None
+
+    # Calculate the posterior variance.
+    posterior_var = float(
+        (alpha * beta) / (total ** 2 * (total + 1))
+    )
+
+    # Calculate the weight assigned to the prior mean
+    # in the posterior mean.
+    prior_weight = float(
+        (a + b) / (a + b + N1 + N0)
+    )
+
+    # Return the posterior summary.
+    return {
+        "a": alpha,
+        "b": beta,
+        "mean": posterior_mean,
+        "mode": posterior_mode,
+        "var": posterior_var,
+        "prior_weight": prior_weight
+    }
+
+# Step 11 - log_evidence
+def log_evidence(N1, N0, a, b, binomial=False):
+    """
+    Calculate the log marginal likelihood of coin flips
+    under a Beta(a, b) prior.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First Beta prior parameter.
+        b: Second Beta prior parameter.
+        binomial: If True, include the binomial coefficient.
+
+    Returns:
+        Python float representing the log marginal likelihood.
+
+    Notes:
+        - Uses the previously implemented log_beta() function.
+        - Uses math.lgamma() for numerical stability.
+        - binomial=False evaluates a specific sequence.
+        - binomial=True evaluates the probability of the counts.
+    """
+
+    # Total number of observed flips.
+    N = N1 + N0
+
+    # Calculate the log marginal likelihood for a specific sequence.
+    evidence = log_beta(a + N1, b + N0) - log_beta(a, b)
+
+    # Include the binomial coefficient when requested.
+    if binomial:
+        log_combination = (
+            math.lgamma(N + 1)
+            - math.lgamma(N1 + 1)
+            - math.lgamma(N0 + 1)
+        )
+
+        evidence += log_combination
+
+    return float(evidence)
+
