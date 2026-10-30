@@ -37,6 +37,7 @@ python scaffold.py
 - [x] **25.** bootstrap_mle
 - [x] **26.** sampling_distribution
 - [x] **27.** wald_interval
+- [x] **28.** interval_coverage
 
 ---
 

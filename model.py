@@ -1716,3 +1716,40 @@ def wald_interval(N1, N0, z=1.96):
     # Return the interval without clipping to [0, 1].
     return (float(lower), float(upper))
 
+# Step 28 - interval_coverage
+def interval_coverage(interval_fn, theta, N):
+    """
+    Calculate the exact frequentist coverage probability
+    of a confidence interval procedure.
+
+    Parameters:
+        interval_fn: Function accepting (N1, N0) and returning
+                     (lower, upper) interval endpoints.
+        theta: True probability of heads.
+        N: Number of independent coin flips.
+
+    Returns:
+        Python float representing the exact coverage probability.
+
+    Notes:
+        - Uses sampling_distribution() from Step 26.
+        - Enumerates every possible number of heads.
+        - Does not use simulation.
+    """
+
+    # Define an indicator function that checks whether
+    # the confidence interval contains the true probability.
+    def covers(N1, N0):
+        lower, upper = interval_fn(N1, N0)
+
+        return 1.0 if lower <= theta <= upper else 0.0
+
+    # Calculate the exact sampling distribution of the coverage indicator.
+    values, pmf = sampling_distribution(covers, theta, N)
+
+    # Sum the probabilities of all datasets whose intervals
+    # contain the true heads probability.
+    coverage = np.sum(values * pmf)
+
+    return float(coverage)
+
