@@ -11,6 +11,7 @@ python scaffold.py
 ## Steps
 
 - [x] **1.** coin_counts
+- [x] **2.** bernoulli_nll
 
 ---
 

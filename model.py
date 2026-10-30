@@ -50,3 +50,50 @@ def coin_counts(y):
 
     return (N1, N0)
 
+# Step 2 - bernoulli_nll
+def bernoulli_nll(theta, N1, N0):
+    """
+    Compute the negative log-likelihood of Bernoulli coin flips.
+
+    Parameters
+    ----------
+    theta : float or numpy.ndarray
+        Probability of heads, in [0, 1].
+    N1 : int
+        Number of heads.
+    N0 : int
+        Number of tails.
+
+    Returns
+    -------
+    float or numpy.ndarray
+        Negative log-likelihood. Returns a Python float for scalar
+        input and a NumPy array for array input.
+    """
+
+    # Convert theta to a NumPy array for element-wise computation.
+    theta_array = np.asarray(theta, dtype=float)
+
+    # Initialize the negative log-likelihood with zeros.
+    nll = np.zeros_like(theta_array, dtype=float)
+
+    # Suppress warnings when evaluating log(0) at boundary values.
+    with np.errstate(divide="ignore", invalid="ignore"):
+
+        # Contribution from heads.
+        # Skip the term when N1 = 0 (convention: 0 * log(0) = 0).
+        if N1 != 0:
+            nll -= N1 * np.log(theta_array)
+
+        # Contribution from tails.
+        # Skip the term when N0 = 0.
+        if N0 != 0:
+            nll -= N0 * np.log1p(-theta_array)
+
+    # Return a Python float for scalar input.
+    if np.isscalar(theta):
+        return float(nll)
+
+    # Return a NumPy array for array input.
+    return nll
+
