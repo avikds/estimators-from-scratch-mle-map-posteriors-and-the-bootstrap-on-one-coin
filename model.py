@@ -1065,3 +1065,71 @@ def credible_intervals(a, b, mass=0.95):
         "hdi": (float(hdi_lower), float(hdi_upper))
     }
 
+# Step 18 - hdi_from_samples
+def hdi_from_samples(samples, mass=0.95):
+    """
+    Estimate the highest-density interval from a collection of samples.
+
+    Parameters:
+        samples: One-dimensional array or list of samples.
+        mass: Required proportion of samples inside the interval.
+
+    Returns:
+        Tuple (lower, upper) containing Python floats.
+
+    Raises:
+        ValueError: If the required number of samples is less than one,
+                    exceeds the available sample count, or the input
+                    samples are invalid.
+    """
+
+    # Convert samples into a one-dimensional NumPy float array.
+    samples = np.asarray(samples, dtype=float)
+
+    # Validate the input dimensions.
+    if samples.ndim != 1:
+        raise ValueError("Samples must be a one-dimensional array.")
+
+    # Reject non-finite sample values.
+    if not np.all(np.isfinite(samples)):
+        raise ValueError("Samples must contain only finite values.")
+
+    # Number of available samples.
+    n = len(samples)
+
+    # Calculate the number of samples required inside the interval.
+    # The small offset protects against floating-point rounding errors.
+    k = math.ceil(mass * n - 1e-9)
+
+    # Validate the required window size.
+    if k < 1 or k > n:
+        raise ValueError("The required interval size must be between 1 and n.")
+
+    # Sort the samples in ascending order.
+    sorted_samples = np.sort(samples)
+
+    # Initialize the best interval.
+    best_width = float("inf")
+    best_lower = 0.0
+    best_upper = 0.0
+
+    # Examine every window containing k consecutive samples.
+    for i in range(n - k + 1):
+
+        # Lower and upper endpoints of the current window.
+        lower = float(sorted_samples[i])
+        upper = float(sorted_samples[i + k - 1])
+
+        # Calculate the width of the current interval.
+        width = upper - lower
+
+        # Update only when a strictly narrower interval is found.
+        # This preserves the first (lowest) window in case of ties.
+        if width < best_width:
+            best_width = width
+            best_lower = lower
+            best_upper = upper
+
+    # Return the narrowest interval as Python floats.
+    return (float(best_lower), float(best_upper))
+

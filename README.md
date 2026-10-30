@@ -27,6 +27,7 @@ python scaffold.py
 - [x] **15.** mixture_posterior
 - [x] **16.** beta_quantile
 - [x] **17.** credible_intervals
+- [x] **18.** hdi_from_samples
 
 ---
 
