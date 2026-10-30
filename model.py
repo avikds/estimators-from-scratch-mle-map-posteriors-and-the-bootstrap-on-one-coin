@@ -11,38 +11,32 @@ import numpy as np
 
 def coin_counts(y):
     """
-    Convert a sequence of coin flips into sufficient statistics.
+    Convert a coin-flip log into sufficient statistics.
 
-    Parameters
-    ----------
-    y : array-like
-        One-dimensional sequence containing only 1 (heads) and 0 (tails).
+    Parameters:
+        y: One-dimensional array or list containing only 0s and 1s.
+           1 represents heads and 0 represents tails.
 
-    Returns
-    -------
-    tuple
-        (N1, N0), where N1 is the number of heads and N0 is the number of tails.
-        Both values are Python integers.
+    Returns:
+        Tuple (N1, N0), where:
+            N1 = number of heads
+            N0 = number of tails
+
+    Raises:
+        ValueError: If y is not one-dimensional or contains
+                    values other than 0 and 1.
     """
 
     # Convert the input into a NumPy array.
-    try:
-        y = np.asarray(y)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("y must be a one-dimensional array or list.") from exc
+    y = np.asarray(y)
 
     # Validate that the input is one-dimensional.
     if y.ndim != 1:
-        raise ValueError("y must be a one-dimensional array or list.")
+        raise ValueError("Input must be a one-dimensional array.")
 
-    # Validate that every entry is either 0 (tails) or 1 (heads).
-    try:
-        valid = np.all((y == 0) | (y == 1))
-    except (TypeError, ValueError):
-        raise ValueError("Every entry in y must be either 0 or 1.")
-
-    if not valid:
-        raise ValueError("Every entry in y must be either 0 or 1.")
+    # Validate that every entry is either 0 or 1.
+    if not np.all((y == 0) | (y == 1)):
+        raise ValueError("All entries must be either 0 or 1.")
 
     # Count heads (1) and tails (0).
     N1 = int(np.count_nonzero(y == 1))
