@@ -236,3 +236,44 @@ def gaussian_mle(x):
 
     return (mu, var_mle, var_unbiased)
 
+# Step 6 - map_bernoulli
+def map_bernoulli(N1, N0, a, b):
+    """
+    Calculate the MAP estimate of the Bernoulli heads probability
+    using a Beta(a, b) prior.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: Positive first Beta prior parameter.
+        b: Positive second Beta prior parameter.
+
+    Returns:
+        Python float representing the posterior mode.
+
+    Raises:
+        ValueError: If prior parameters are not positive or if
+                    the posterior does not have a well-defined mode.
+    """
+
+    # Validate that the prior parameters are positive and finite.
+    if not all(math.isfinite(v) for v in (a, b)) or a <= 0 or b <= 0:
+        raise ValueError("Beta prior parameters a and b must be positive and finite.")
+
+    # Validate the observed counts.
+    if not all(math.isfinite(v) for v in (N1, N0)) or N1 < 0 or N0 < 0:
+        raise ValueError("N1 and N0 must be non-negative and finite.")
+
+    # Calculate the posterior Beta distribution parameters.
+    alpha = N1 + a
+    beta = N0 + b
+
+    # Check whether the posterior has a well-defined mode in [0, 1].
+    if alpha < 1 or beta < 1 or alpha + beta <= 2:
+        raise ValueError("The posterior Beta distribution has no well-defined mode.")
+
+    # Calculate the MAP estimate (posterior mode).
+    theta_map = (alpha - 1) / (alpha + beta - 2)
+
+    return float(theta_map)
+
