@@ -311,3 +311,90 @@ def log_loss(p_heads, y):
     # Divide by the number of flips to obtain average log loss.
     return float(total_nll / N)
 
+# Step 8 - black_swan_risk
+def black_swan_risk(theta, n, n_future, n_rep, rng):
+    """
+    Measure the risk of MLE and add-one smoothing through simulation.
+
+    Parameters:
+        theta: True probability of heads.
+        n: Number of observed coin flips.
+        n_future: Number of future coin flips.
+        n_rep: Number of simulation repetitions.
+        rng: NumPy random number generator.
+
+    Returns:
+        Dictionary containing:
+            mle_infinite: Fraction of repetitions with infinite MLE loss.
+            mle_loss_when_finite: Mean MLE loss over finite-loss repetitions.
+            add_one_loss: Mean loss using add-one smoothing.
+            oracle_loss: Mean loss using the true probability.
+    """
+
+    # Store finite MLE losses separately.
+    mle_losses_finite = []
+
+    # Store losses from add-one smoothing and the oracle.
+    add_one_losses = []
+    oracle_losses = []
+
+    # Count repetitions in which MLE produces infinite loss.
+    mle_infinite_count = 0
+
+    # Run the simulation.
+    for _ in range(n_rep):
+
+        # Step 1: Generate the observed coin flips.
+        y = (rng.random(n) < theta).astype(int)
+
+        # Step 2: Generate future coin flips.
+        future = (rng.random(n_future) < theta).astype(int)
+
+        # Step 3: Obtain the sufficient statistics.
+        N1, N0 = coin_counts(y)
+
+        # Calculate the MLE estimate of the heads probability.
+        p_mle = N1 / n
+
+        # Evaluate the MLE prediction on future observations.
+        mle_loss = log_loss(p_mle, future)
+
+        # Record whether the MLE prediction has infinite loss.
+        if math.isinf(mle_loss):
+            mle_infinite_count += 1
+        else:
+            mle_losses_finite.append(mle_loss)
+
+        # Calculate the add-one smoothed estimate using Beta(2, 2).
+        p_add_one = map_bernoulli(N1, N0, 2, 2)
+
+        # Evaluate the add-one smoothed prediction.
+        add_one_losses.append(log_loss(p_add_one, future))
+
+        # Evaluate the oracle prediction using the true theta.
+        oracle_losses.append(log_loss(theta, future))
+
+    # Calculate the fraction of repetitions with infinite MLE loss.
+    mle_infinite = float(mle_infinite_count / n_rep)
+
+    # Calculate the mean MLE loss over finite-loss repetitions.
+    # Return NaN if every MLE loss was infinite.
+    if mle_losses_finite:
+        mle_loss_when_finite = float(np.mean(mle_losses_finite))
+    else:
+        mle_loss_when_finite = float("nan")
+
+    # Calculate the average add-one smoothing loss.
+    add_one_loss = float(np.mean(add_one_losses))
+
+    # Calculate the average oracle loss.
+    oracle_loss = float(np.mean(oracle_losses))
+
+    # Return the simulation results.
+    return {
+        "mle_infinite": mle_infinite,
+        "mle_loss_when_finite": mle_loss_when_finite,
+        "add_one_loss": add_one_loss,
+        "oracle_loss": oracle_loss
+    }
+
