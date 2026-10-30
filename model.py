@@ -1217,3 +1217,66 @@ def grid_posterior(N1, N0, a, b, K):
         np.asarray(probs, dtype=float)
     )
 
+# Step 20 - laplace_theta
+def laplace_theta(N1, N0, a, b):
+    """
+    Fit a Laplace (Gaussian) approximation to the Beta-Bernoulli
+    posterior in theta space.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First Beta prior parameter.
+        b: Second Beta prior parameter.
+
+    Returns:
+        Tuple (mode, sd, log_Z), containing Python floats.
+
+        mode: MAP estimate of the posterior.
+        sd: Standard deviation of the Laplace approximation.
+        log_Z: Laplace approximation of the log marginal likelihood.
+
+    Raises:
+        ValueError: If the posterior mode lies on the boundary
+                    rather than strictly inside (0, 1).
+    """
+
+    # Calculate the posterior Beta parameters.
+    alpha = N1 + a
+    beta = N0 + b
+
+    # A valid interior mode requires both posterior parameters > 1.
+    if alpha <= 1 or beta <= 1:
+        raise ValueError(
+            "Laplace approximation requires an interior posterior mode."
+        )
+
+    # Calculate the MAP estimate using the previously implemented function.
+    mode = map_bernoulli(N1, N0, a, b)
+
+    # Calculate the second derivative of the energy function
+    # at the posterior mode.
+    H = (
+        (alpha - 1) / (mode ** 2)
+        + (beta - 1) / ((1.0 - mode) ** 2)
+    )
+
+    # Calculate the standard deviation of the Gaussian approximation.
+    sd = H ** -0.5
+
+    # Calculate the energy at the posterior mode:
+    # E(theta) = NLL(theta) - log Beta(theta | a, b).
+    energy = (
+        bernoulli_nll(mode, N1, N0)
+        - beta_logpdf(mode, a, b)
+    )
+
+    # Calculate the Laplace approximation of the log evidence.
+    log_Z = (
+        -energy
+        + 0.5 * math.log(2.0 * math.pi)
+        - 0.5 * math.log(H)
+    )
+
+    return (float(mode), float(sd), float(log_Z))
+
