@@ -23,6 +23,7 @@ python scaffold.py
 - [x] **11.** log_evidence
 - [x] **12.** sequential_predictive
 - [x] **13.** predictive_counts
+- [x] **14.** beta_cdf
 
 ---
 

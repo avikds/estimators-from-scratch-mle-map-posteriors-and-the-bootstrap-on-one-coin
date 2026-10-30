@@ -708,3 +708,150 @@ def predictive_counts(M, N1, N0, a, b):
 
     return bayes, plugin
 
+# Step 14 - beta_cdf
+def beta_cdf(x, a, b):
+    """
+    Calculate the regularized incomplete beta function I_x(a, b),
+    which is the CDF of a Beta(a, b) distribution.
+
+    Parameters:
+        x: Scalar evaluation point.
+        a: First positive Beta distribution parameter.
+        b: Second positive Beta distribution parameter.
+
+    Returns:
+        Python float representing the Beta CDF.
+
+    Notes:
+        - Uses the continued fraction with the modified Lentz algorithm.
+        - Uses symmetry to improve convergence.
+        - Uses log_beta() for numerical stability.
+        - Does not require SciPy.
+    """
+
+    # Convert inputs to Python floats.
+    x = float(x)
+    a = float(a)
+    b = float(b)
+
+    # Validate the Beta distribution parameters.
+    if not (math.isfinite(a) and math.isfinite(b)) or a <= 0 or b <= 0:
+        raise ValueError("Beta parameters a and b must be positive and finite.")
+
+    if math.isnan(x):
+        raise ValueError("x must not be NaN.")
+
+    # Handle boundary and out-of-range values.
+    if x <= 0.0:
+        return 0.0
+
+    if x >= 1.0:
+        return 1.0
+
+    # Constants for the modified Lentz algorithm.
+    MAX_ITER = 20000
+    EPS = 3e-14
+    FPMIN = 1e-300
+
+    def beta_continued_fraction(aa, bb, xx):
+        """
+        Evaluate the continued fraction for the incomplete
+        beta function using the modified Lentz algorithm.
+        """
+
+        qab = aa + bb
+        qap = aa + 1.0
+        qam = aa - 1.0
+
+        # Initialize the continued fraction.
+        c = 1.0
+        d = 1.0 - qab * xx / qap
+
+        if abs(d) < FPMIN:
+            d = FPMIN
+
+        d = 1.0 / d
+        h = d
+
+        # Iteratively evaluate the continued fraction.
+        for m in range(1, MAX_ITER + 1):
+
+            m2 = 2 * m
+
+            # First continued-fraction coefficient.
+            aa_m = (
+                m * (bb - m) * xx
+                / ((qam + m2) * (aa + m2))
+            )
+
+            # Modified Lentz update.
+            d = 1.0 + aa_m * d
+            if abs(d) < FPMIN:
+                d = FPMIN
+
+            c = 1.0 + aa_m / c
+            if abs(c) < FPMIN:
+                c = FPMIN
+
+            d = 1.0 / d
+            h *= d * c
+
+            # Second continued-fraction coefficient.
+            aa_m = (
+                -(aa + m) * (qab + m) * xx
+                / ((aa + m2) * (qap + m2))
+            )
+
+            # Modified Lentz update.
+            d = 1.0 + aa_m * d
+            if abs(d) < FPMIN:
+                d = FPMIN
+
+            c = 1.0 + aa_m / c
+            if abs(c) < FPMIN:
+                c = FPMIN
+
+            d = 1.0 / d
+
+            # Update the continued fraction.
+            delta = d * c
+            h *= delta
+
+            # Check convergence.
+            if abs(delta - 1.0) < EPS:
+                return h
+
+        # Raise an error if convergence was not achieved.
+        raise ArithmeticError(
+            "Incomplete beta continued fraction did not converge."
+        )
+
+    # Calculate the logarithm of the beta prefactor.
+    log_bt = (
+        a * math.log(x)
+        + b * math.log1p(-x)
+        - log_beta(a, b)
+    )
+
+    bt = math.exp(log_bt)
+
+    # Use symmetry to evaluate the continued fraction
+    # in its faster-converging region.
+    if x < (a + 1.0) / (a + b + 2.0):
+
+        result = (
+            bt * beta_continued_fraction(a, b, x) / a
+        )
+
+    else:
+
+        result = (
+            1.0
+            - bt * beta_continued_fraction(b, a, 1.0 - x) / b
+        )
+
+    # Protect against tiny floating-point errors outside [0, 1].
+    result = min(1.0, max(0.0, result))
+
+    return float(result)
+
