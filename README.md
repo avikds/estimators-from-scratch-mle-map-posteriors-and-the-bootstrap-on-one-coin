@@ -24,6 +24,7 @@ python scaffold.py
 - [x] **12.** sequential_predictive
 - [x] **13.** predictive_counts
 - [x] **14.** beta_cdf
+- [x] **15.** mixture_posterior
 
 ---
 

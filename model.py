@@ -855,3 +855,97 @@ def beta_cdf(x, a, b):
 
     return float(result)
 
+# Step 15 - mixture_posterior
+def mixture_posterior(weights, components, N1, N0):
+    """
+    Update a mixture-of-Betas prior using observed Bernoulli data.
+
+    Parameters:
+        weights: Sequence of prior mixing weights summing to one.
+        components: List of (a_k, b_k) Beta prior parameter tuples.
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+
+    Returns:
+        Tuple (post_weights, post_components), where:
+
+        post_weights:
+            NumPy float array of posterior mixing weights.
+
+        post_components:
+            List of updated (a_k + N1, b_k + N0) tuples.
+    """
+
+    # Convert prior weights into a NumPy float array.
+    weights = np.asarray(weights, dtype=float)
+
+    # Validate the prior weights.
+    if weights.ndim != 1 or len(weights) == 0:
+        raise ValueError("Weights must be a non-empty one-dimensional sequence.")
+
+    if not np.all(np.isfinite(weights)) or np.any(weights < 0):
+        raise ValueError("Weights must be finite and non-negative.")
+
+    if not np.isclose(np.sum(weights), 1.0):
+        raise ValueError("Prior mixing weights must sum to one.")
+
+    # Convert components into a list of parameter tuples.
+    components = list(components)
+
+    # Ensure that the number of weights matches the number of components.
+    if len(weights) != len(components):
+        raise ValueError("Weights and components must have the same length.")
+
+    if not all(len(component) == 2 for component in components):
+        raise ValueError("Each component must contain exactly two parameters.")
+
+    # Validate the observed counts.
+    if N1 < 0 or N0 < 0:
+        raise ValueError("Observed counts must be non-negative.")
+
+    # Calculate the posterior parameters and log unnormalized weights.
+    post_components = []
+    log_weights = []
+
+    for weight, (a_k, b_k) in zip(weights, components):
+
+        # Validate the Beta component parameters.
+        if not all(math.isfinite(v) and v > 0 for v in (a_k, b_k)):
+            raise ValueError("Beta component parameters must be positive and finite.")
+
+        # Update the component using the observed heads and tails.
+        a_post = a_k + N1
+        b_post = b_k + N0
+
+        post_components.append((a_post, b_post))
+
+        # Calculate the log prior weight.
+        # A zero prior weight corresponds to negative infinity.
+        if weight == 0.0:
+            log_weight = -np.inf
+        else:
+            log_weight = math.log(weight)
+
+        # Calculate the log marginal likelihood for this component.
+        evidence = log_evidence(N1, N0, a_k, b_k, binomial=False)
+
+        # Store the unnormalized posterior weight in log space.
+        log_weights.append(log_weight + evidence)
+
+    # Convert log weights into a NumPy array.
+    log_weights = np.asarray(log_weights, dtype=float)
+
+    # Log-sum-exp normalization for numerical stability.
+    max_log_weight = np.max(log_weights)
+
+    if not np.isfinite(max_log_weight):
+        raise ValueError("The posterior mixing weights cannot be normalized.")
+
+    # Exponentiate after subtracting the maximum log weight.
+    post_weights = np.exp(log_weights - max_log_weight)
+
+    # Normalize posterior mixing weights so that they sum to one.
+    post_weights /= np.sum(post_weights)
+
+    return post_weights, post_components
+
