@@ -1568,3 +1568,53 @@ def sample_tv(samples, N1, N0, a, b, bins=50):
     # Calculate and return the total variation distance.
     return float(0.5 * (discrepancy + leaked))
 
+# Step 25 - bootstrap_mle
+def bootstrap_mle(y, B, rng):
+    """
+    Approximate the sampling distribution of the Bernoulli MLE
+    using the nonparametric bootstrap.
+
+    Parameters:
+        y: One-dimensional array or list of observed coin flips (0 or 1).
+        B: Number of bootstrap resamples.
+        rng: NumPy random number generator.
+
+    Returns:
+        NumPy float array of length B containing the MLE
+        (fraction of heads) for each bootstrap resample.
+
+    Raises:
+        ValueError: If y is invalid or empty, or B is negative
+                    or not a non-negative integer.
+    """
+
+    # Validate the observed coin-flip sequence.
+    coin_counts(y)
+
+    # Convert observations into a NumPy array.
+    y = np.asarray(y)
+
+    # Number of observations.
+    N = len(y)
+
+    # Bootstrap resampling requires at least one observation.
+    if N == 0:
+        raise ValueError("The input coin-flip sequence must not be empty.")
+
+    # Validate the number of bootstrap resamples.
+    if (
+        not isinstance(B, (int, np.integer))
+        or isinstance(B, (bool, np.bool_))
+        or B < 0
+    ):
+        raise ValueError("B must be a non-negative integer.")
+
+    # Generate all bootstrap resampling indices in a single call.
+    # Each row represents one resample of N observations with replacement.
+    idx = rng.integers(0, N, size=(B, N))
+
+    # Calculate the fraction of heads in each bootstrap resample.
+    bootstrap_estimates = np.mean(y[idx], axis=1, dtype=float)
+
+    return np.asarray(bootstrap_estimates, dtype=float)
+
