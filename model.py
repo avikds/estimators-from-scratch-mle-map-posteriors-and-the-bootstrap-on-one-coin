@@ -1280,3 +1280,73 @@ def laplace_theta(N1, N0, a, b):
 
     return (float(mode), float(sd), float(log_Z))
 
+# Step 21 - laplace_logit
+def laplace_logit(N1, N0, a, b):
+    """
+    Fit a Laplace (Gaussian) approximation to the Beta-Bernoulli
+    posterior in logit space.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First Beta prior parameter.
+        b: Second Beta prior parameter.
+
+    Returns:
+        Tuple (alpha_mode, sd, log_Z), containing Python floats.
+
+        alpha_mode: Posterior mode in logit space.
+        sd: Standard deviation of the Laplace approximation.
+        log_Z: Laplace approximation of the log marginal likelihood.
+
+    Notes:
+        - Includes the Jacobian correction theta * (1 - theta).
+        - Works even when the theta-space MAP is at a boundary.
+        - Uses the previously implemented log_beta() function.
+    """
+
+    # Calculate the posterior Beta parameters.
+    A = N1 + a
+    B = N0 + b
+
+    # Both posterior parameters must be positive.
+    if A <= 0 or B <= 0:
+        raise ValueError("Posterior parameters must be positive.")
+
+    # Total posterior concentration.
+    total = A + B
+
+    # Calculate the mode in probability space.
+    theta_mode = A / total
+
+    # Transform the mode into logit space.
+    alpha_mode = math.log(A / B)
+
+    # Calculate the Hessian (second derivative of the energy)
+    # in logit space, including the Jacobian correction.
+    H_alpha = (A * B) / total
+
+    # Standard deviation of the Gaussian approximation.
+    sd = H_alpha ** -0.5
+
+    # Calculate the energy at the logit-space mode.
+    # This includes the Jacobian correction.
+    energy = (
+        -A * math.log(theta_mode)
+        -B * math.log1p(-theta_mode)
+        +log_beta(a, b)
+    )
+
+    # Laplace approximation of the log marginal likelihood.
+    log_Z = (
+        -energy
+        + 0.5 * math.log(2.0 * math.pi)
+        - 0.5 * math.log(H_alpha)
+    )
+
+    return (
+        float(alpha_mode),
+        float(sd),
+        float(log_Z)
+    )
+
