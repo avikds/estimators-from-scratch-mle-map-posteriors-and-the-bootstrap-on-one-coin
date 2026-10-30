@@ -613,3 +613,98 @@ def sequential_predictive(y, a, b):
 
     return np.asarray(p, dtype=float)
 
+# Step 13 - predictive_counts
+def predictive_counts(M, N1, N0, a, b):
+    """
+    Predict the number of heads in M future coin flips
+    using Bayesian Beta-Binomial and plug-in Binomial models.
+
+    Parameters:
+        M: Number of future coin flips.
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First parameter of the Beta prior.
+        b: Second parameter of the Beta prior.
+
+    Returns:
+        Tuple (bayes, plugin), containing two NumPy float arrays
+        of length M + 1.
+
+        bayes[x]: Beta-Binomial posterior predictive probability.
+        plugin[x]: Binomial probability using the MAP estimate.
+    """
+
+    # Update the Beta prior parameters using observed data.
+    alpha = a + N1
+    beta = b + N0
+
+    # Calculate the normalization constant for the
+    # Beta-Binomial predictive distribution.
+    log_normalizer = log_beta(alpha, beta)
+
+    # Initialize the Bayesian predictive distribution.
+    bayes = np.zeros(M + 1, dtype=float)
+
+    # Calculate the Beta-Binomial probabilities.
+    for x in range(M + 1):
+
+        # Logarithm of the binomial coefficient C(M, x).
+        log_combination = (
+            math.lgamma(M + 1)
+            - math.lgamma(x + 1)
+            - math.lgamma(M - x + 1)
+        )
+
+        # Calculate the log Beta-Binomial probability.
+        log_probability = (
+            log_combination
+            + log_beta(x + alpha, M - x + beta)
+            - log_normalizer
+        )
+
+        # Convert log probability into probability.
+        bayes[x] = math.exp(log_probability)
+
+    # Normalize to ensure that the probabilities sum to one.
+    bayes /= np.sum(bayes)
+
+    # Calculate the MAP estimate using the previously
+    # implemented MAP estimator.
+    theta_map = map_bernoulli(N1, N0, a, b)
+
+    # Initialize the plug-in Binomial distribution.
+    plugin = np.zeros(M + 1, dtype=float)
+
+    # Handle boundary probabilities separately to avoid log(0).
+    if theta_map == 0.0:
+        plugin[0] = 1.0
+
+    elif theta_map == 1.0:
+        plugin[M] = 1.0
+
+    else:
+        # Calculate the plug-in Binomial probabilities.
+        for x in range(M + 1):
+
+            # Logarithm of the binomial coefficient.
+            log_combination = (
+                math.lgamma(M + 1)
+                - math.lgamma(x + 1)
+                - math.lgamma(M - x + 1)
+            )
+
+            # Logarithm of the Binomial probability.
+            log_probability = (
+                log_combination
+                + x * math.log(theta_map)
+                + (M - x) * math.log1p(-theta_map)
+            )
+
+            # Convert log probability into probability.
+            plugin[x] = math.exp(log_probability)
+
+        # Normalize the plug-in probabilities.
+        plugin /= np.sum(plugin)
+
+    return bayes, plugin
+

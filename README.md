@@ -22,6 +22,7 @@ python scaffold.py
 - [x] **10.** beta_posterior
 - [x] **11.** log_evidence
 - [x] **12.** sequential_predictive
+- [x] **13.** predictive_counts
 
 ---
 
