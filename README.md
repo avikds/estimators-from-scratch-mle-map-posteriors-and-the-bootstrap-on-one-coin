@@ -14,6 +14,7 @@ python scaffold.py
 - [x] **2.** bernoulli_nll
 - [x] **3.** golden_section_min
 - [x] **4.** categorical_mle
+- [x] **5.** gaussian_mle
 
 ---
 

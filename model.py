@@ -193,3 +193,46 @@ def categorical_mle(y, K):
 
     return counts, theta
 
+# Step 5 - gaussian_mle
+def gaussian_mle(x):
+    """
+    Fit a Gaussian distribution to repeated measurements using MLE.
+
+    Parameters:
+        x: Array or list of coin-weight measurements.
+
+    Returns:
+        Tuple (mu, var_mle, var_unbiased), containing Python floats.
+
+        mu: MLE of the mean.
+        var_mle: MLE of the variance (division by N).
+        var_unbiased: Unbiased variance estimate (division by N-1).
+
+    Raises:
+        ValueError: If fewer than two measurements are provided.
+    """
+
+    # Convert measurements into a NumPy array of floats.
+    x = np.asarray(x, dtype=float)
+
+    # Check that at least two measurements are available.
+    N = x.size
+    if N < 2:
+        raise ValueError("At least two measurements are required.")
+
+    # Calculate the sufficient statistics.
+    mean_x = np.mean(x)
+    mean_x_squared = np.mean(x ** 2)
+
+    # MLE of the Gaussian mean.
+    mu = float(mean_x)
+
+    # MLE of the variance using E[X^2] - E[X]^2.
+    # Clip tiny negative values caused by floating-point roundoff.
+    var_mle = float(max(0.0, mean_x_squared - mean_x ** 2))
+
+    # Unbiased variance estimate (Bessel's correction).
+    var_unbiased = float(var_mle * N / (N - 1))
+
+    return (mu, var_mle, var_unbiased)
+
