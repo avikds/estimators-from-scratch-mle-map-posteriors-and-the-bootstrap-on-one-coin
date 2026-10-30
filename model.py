@@ -141,3 +141,55 @@ def golden_section_min(f, lo, hi, tol=1e-10):
     # Return the midpoint of the final search interval.
     return float((lo + hi) / 2.0)
 
+# Step 4 - categorical_mle
+def categorical_mle(y, K):
+    """
+    Estimate categorical probabilities using maximum likelihood estimation.
+
+    Parameters:
+        y: One-dimensional integer array of observed outcomes (0 to K-1).
+        K: Total number of possible outcomes.
+
+    Returns:
+        counts: Integer NumPy array containing the count of each outcome.
+        theta: Float NumPy array containing the MLE probabilities.
+
+    Raises:
+        ValueError: If y is empty, not one-dimensional, contains
+                    non-integer values, or has outcomes outside 0 to K-1.
+                    Also raised if K is not a positive integer.
+    """
+
+    # Validate K.
+    if not isinstance(K, (int, np.integer)) or isinstance(K, (bool, np.bool_)) or K <= 0:
+        raise ValueError("K must be a positive integer.")
+
+    K = int(K)
+
+    # Convert the observations into a NumPy array.
+    y = np.asarray(y)
+
+    # Ensure that y is one-dimensional.
+    if y.ndim != 1:
+        raise ValueError("Input y must be a one-dimensional array.")
+
+    # Reject an empty observation array.
+    if y.size == 0:
+        raise ValueError("Input y must not be empty.")
+
+    # Ensure that all observations are integers.
+    if not np.issubdtype(y.dtype, np.integer):
+        raise ValueError("All outcomes must be integers.")
+
+    # Ensure that every observation belongs to the range 0 to K-1.
+    if np.any(y < 0) or np.any(y >= K):
+        raise ValueError("Outcomes must be between 0 and K-1.")
+
+    # Count every possible outcome, including outcomes never observed.
+    counts = np.bincount(y, minlength=K)
+
+    # Calculate maximum likelihood probabilities.
+    theta = counts.astype(float) / y.size
+
+    return counts, theta
+
