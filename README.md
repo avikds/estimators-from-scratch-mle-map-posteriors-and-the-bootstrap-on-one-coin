@@ -33,6 +33,7 @@ python scaffold.py
 - [x] **21.** laplace_logit
 - [x] **22.** metropolis
 - [x] **23.** density_tv
+- [x] **24.** sample_tv
 
 ---
 

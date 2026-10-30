@@ -1496,3 +1496,75 @@ def density_tv(log_q, N1, N0, a, b, n_points=2000):
     # Calculate and return the total variation distance.
     return float(0.5 * (integral_abs + leaked))
 
+# Step 24 - sample_tv
+def sample_tv(samples, N1, N0, a, b, bins=50):
+    """
+    Measure the total variation distance between an empirical
+    sample distribution and the exact Beta-Bernoulli posterior.
+
+    Parameters:
+        samples: Collection of posterior samples.
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First Beta prior parameter.
+        b: Second Beta prior parameter.
+        bins: Number of equal-width histogram bins (default: 50).
+
+    Returns:
+        Python float representing the total variation distance.
+
+    Notes:
+        - Uses equally spaced histogram edges between 0 and 1.
+        - Uses beta_cdf() to calculate exact posterior bin masses.
+        - Samples outside [0, 1] contribute to the leakage penalty.
+        - The rightmost endpoint (1.0) is included in the last bin.
+    """
+
+    # Convert samples into a NumPy array.
+    samples = np.asarray(samples, dtype=float)
+
+    # Validate the sample collection.
+    if samples.size == 0:
+        raise ValueError("At least one sample is required.")
+
+    # Validate the number of histogram bins.
+    if (
+        not isinstance(bins, (int, np.integer))
+        or isinstance(bins, (bool, np.bool_))
+        or bins < 1
+    ):
+        raise ValueError("bins must be a positive integer.")
+
+    # Create equally spaced histogram edges over [0, 1].
+    edges = np.linspace(0.0, 1.0, bins + 1)
+
+    # Calculate the histogram counts.
+    # np.histogram includes the rightmost endpoint in the final bin.
+    counts, _ = np.histogram(samples, bins=edges)
+
+    # Convert histogram counts into empirical sample fractions.
+    fractions = counts.astype(float) / samples.size
+
+    # Calculate the exact posterior Beta parameters.
+    alpha = a + N1
+    beta = b + N0
+
+    # Calculate the exact probability mass of each bin
+    # using differences of the Beta CDF at consecutive edges.
+    exact_masses = np.array([
+        beta_cdf(edges[i + 1], alpha, beta)
+        - beta_cdf(edges[i], alpha, beta)
+        for i in range(bins)
+    ], dtype=float)
+
+    # Calculate the fraction of samples outside [0, 1].
+    # Samples outside the histogram edges are not counted.
+    leaked = 1.0 - float(np.sum(fractions))
+
+    # Calculate the sum of absolute differences between
+    # empirical fractions and exact posterior bin masses.
+    discrepancy = float(np.sum(np.abs(fractions - exact_masses)))
+
+    # Calculate and return the total variation distance.
+    return float(0.5 * (discrepancy + leaked))
+
