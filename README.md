@@ -12,6 +12,7 @@ python scaffold.py
 
 - [x] **1.** coin_counts
 - [x] **2.** bernoulli_nll
+- [x] **3.** golden_section_min
 
 ---
 

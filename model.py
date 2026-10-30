@@ -97,3 +97,83 @@ def bernoulli_nll(theta, N1, N0):
     # Return a NumPy array for array input.
     return nll
 
+# Step 3 - golden_section_min
+import math
+
+def golden_section_min(f, lo, hi, tol=1e-10):
+    """
+    Minimize a one-dimensional unimodal function using golden-section search.
+
+    Parameters
+    ----------
+    f : callable
+        Objective function to minimize.
+    lo : float
+        Lower bound of the search interval.
+    hi : float
+        Upper bound of the search interval.
+    tol : float, optional
+        Search tolerance. Default is 1e-10.
+
+    Returns
+    -------
+    float
+        Midpoint of the final search interval.
+    """
+
+    # Convert interval bounds and tolerance to Python floats.
+    a = float(lo)
+    b = float(hi)
+    tol = float(tol)
+
+    # Validate the search interval and tolerance.
+    if a > b:
+        raise ValueError("lo must be less than or equal to hi.")
+
+    if not math.isfinite(tol) or tol <= 0:
+        raise ValueError("tol must be a positive finite number.")
+
+    if not math.isfinite(a) or not math.isfinite(b):
+        raise ValueError("Search bounds must be finite.")
+
+    # If both endpoints are identical, return that point.
+    if a == b:
+        return float(a)
+
+    # Golden ratio constant.
+    r = (math.sqrt(5) - 1) / 2
+
+    # Initialize the two interior points.
+    c = b - r * (b - a)
+    d = a + r * (b - a)
+
+    # Evaluate the function at both interior points.
+    fc = f(c)
+    fd = f(d)
+
+    # Continue until the interval is sufficiently small.
+    while (b - a) > tol:
+
+        if fc < fd:
+            # The minimum lies in [a, d].
+            b = d
+            d = c
+            fd = fc
+
+            # Calculate and evaluate only the new interior point.
+            c = b - r * (b - a)
+            fc = f(c)
+
+        else:
+            # The minimum lies in [c, b].
+            a = c
+            c = d
+            fc = fd
+
+            # Calculate and evaluate only the new interior point.
+            d = a + r * (b - a)
+            fd = f(d)
+
+    # Return the midpoint of the final interval.
+    return float((a + b) / 2)
+
