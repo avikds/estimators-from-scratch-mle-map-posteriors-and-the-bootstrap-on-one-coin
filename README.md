@@ -28,6 +28,7 @@ python scaffold.py
 - [x] **16.** beta_quantile
 - [x] **17.** credible_intervals
 - [x] **18.** hdi_from_samples
+- [x] **19.** grid_posterior
 
 ---
 

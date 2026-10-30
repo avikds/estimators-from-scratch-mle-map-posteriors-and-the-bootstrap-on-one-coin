@@ -1133,3 +1133,87 @@ def hdi_from_samples(samples, mass=0.95):
     # Return the narrowest interval as Python floats.
     return (float(best_lower), float(best_upper))
 
+# Step 19 - grid_posterior
+def grid_posterior(N1, N0, a, b, K):
+    """
+    Approximate a Beta-Bernoulli posterior using a uniform grid.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First Beta prior parameter.
+        b: Second Beta prior parameter.
+        K: Number of equally spaced grid points.
+
+    Returns:
+        Tuple (grid, probs), where:
+
+        grid: NumPy float array of K points between 0 and 1.
+        probs: NumPy float array of normalized posterior probabilities.
+
+    Notes:
+        - Uses bernoulli_nll() from Step 2.
+        - Uses beta_logpdf() from Step 9.
+        - Subtracts the maximum log posterior before exponentiation
+          for numerical stability.
+        - Grid points with negative-infinite log posterior receive
+          exactly zero probability.
+    """
+
+    # Validate the grid size.
+    if not isinstance(K, (int, np.integer)) or isinstance(K, (bool, np.bool_)) or K < 2:
+        raise ValueError("K must be an integer greater than or equal to 2.")
+
+    # Construct K evenly spaced grid points from 0 to 1.
+    grid = np.linspace(0.0, 1.0, K)
+
+    # Calculate the unnormalized log posterior at each grid point.
+    # The log posterior is the log likelihood plus the log prior.
+    with np.errstate(invalid='ignore'):
+        log_posterior = (
+            -bernoulli_nll(grid, N1, N0)
+            + beta_logpdf(grid, a, b)
+        )
+
+    # Handle indeterminate endpoint values caused by combining
+    # an infinite likelihood penalty with a singular Beta prior.
+    alpha_post = N1 + a
+    beta_post = N0 + b
+
+    if np.isnan(log_posterior[0]):
+        if alpha_post > 1.0:
+            log_posterior[0] = -np.inf
+        elif alpha_post == 1.0:
+            log_posterior[0] = -log_beta(a, b)
+        else:
+            log_posterior[0] = np.inf
+
+    if np.isnan(log_posterior[-1]):
+        if beta_post > 1.0:
+            log_posterior[-1] = -np.inf
+        elif beta_post == 1.0:
+            log_posterior[-1] = -log_beta(a, b)
+        else:
+            log_posterior[-1] = np.inf
+
+    # Find the maximum log posterior.
+    max_log_posterior = np.max(log_posterior)
+
+    # Handle an unnormalizable grid.
+    if not np.isfinite(max_log_posterior):
+        raise ValueError(
+            "The posterior cannot be normalized on this grid."
+        )
+
+    # Subtract the maximum before exponentiating.
+    # This improves numerical stability.
+    unnormalized_probs = np.exp(log_posterior - max_log_posterior)
+
+    # Normalize the probabilities so that they sum to one.
+    probs = unnormalized_probs / np.sum(unnormalized_probs)
+
+    return (
+        np.asarray(grid, dtype=float),
+        np.asarray(probs, dtype=float)
+    )
+
