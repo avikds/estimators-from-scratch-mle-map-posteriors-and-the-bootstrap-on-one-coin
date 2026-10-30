@@ -32,6 +32,7 @@ python scaffold.py
 - [x] **20.** laplace_theta
 - [x] **21.** laplace_logit
 - [x] **22.** metropolis
+- [x] **23.** density_tv
 
 ---
 

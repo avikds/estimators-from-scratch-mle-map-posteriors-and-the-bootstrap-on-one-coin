@@ -1435,3 +1435,64 @@ def metropolis(log_target, x0, n_samples, step, rng):
 
     return samples, acceptance_rate
 
+# Step 23 - density_tv
+def density_tv(log_q, N1, N0, a, b, n_points=2000):
+    """
+    Measure the total variation distance between an approximate
+    density and the exact Beta-Bernoulli posterior.
+
+    Parameters:
+        log_q: Vectorized function returning the log of the
+               approximate density q(theta).
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        a: First Beta prior parameter.
+        b: Second Beta prior parameter.
+        n_points: Number of midpoint integration points (default: 2000).
+
+    Returns:
+        Python float representing the total variation distance.
+
+    Notes:
+        - The exact posterior is Beta(a + N1, b + N0).
+        - Uses the midpoint integration rule over [0, 1].
+        - Accounts for approximate density mass outside [0, 1].
+        - Reuses beta_logpdf() from Step 9.
+    """
+
+    # Validate the number of integration points.
+    if not isinstance(n_points, (int, np.integer)) or isinstance(n_points, (bool, np.bool_)) or n_points < 1:
+        raise ValueError("n_points must be a positive integer.")
+
+    # Create equally spaced midpoint locations over [0, 1].
+    theta = (np.arange(n_points) + 0.5) / n_points
+
+    # Calculate the exact posterior log density.
+    log_p = beta_logpdf(theta, a + N1, b + N0)
+
+    # Evaluate the approximate log density at the same points.
+    log_q_values = np.asarray(log_q(theta), dtype=float)
+
+    # Support scalar as well as vectorized log-density outputs.
+    log_q_values = np.broadcast_to(log_q_values, theta.shape)
+
+    # Convert both log densities into ordinary densities.
+    with np.errstate(over='ignore', under='ignore', invalid='ignore'):
+        p = np.exp(log_p)
+        q = np.exp(log_q_values)
+
+    # Width of each integration cell.
+    dx = 1.0 / n_points
+
+    # Approximate the integral of the absolute density difference.
+    integral_abs = float(np.sum(np.abs(p - q)) * dx)
+
+    # Approximate the probability mass of q inside [0, 1].
+    integral_q = float(np.sum(q) * dx)
+
+    # Calculate the approximate probability mass outside [0, 1].
+    leaked = max(0.0, 1.0 - integral_q)
+
+    # Calculate and return the total variation distance.
+    return float(0.5 * (integral_abs + leaked))
+
