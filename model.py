@@ -1006,3 +1006,62 @@ def beta_quantile(p, a, b):
     # Return the midpoint of the final bracket.
     return float((lo + hi) / 2.0)
 
+# Step 17 - credible_intervals
+def credible_intervals(a, b, mass=0.95):
+    """
+    Calculate the central and highest-density credible intervals
+    for a Beta(a, b) distribution.
+
+    Parameters:
+        a: First positive Beta distribution parameter.
+        b: Second positive Beta distribution parameter.
+        mass: Required probability mass (default: 0.95).
+
+    Returns:
+        Dictionary containing:
+            central: Tuple (lower, upper) for the equal-tailed interval.
+            hdi: Tuple (lower, upper) for the shortest interval.
+
+    Notes:
+        - Uses beta_quantile() from Step 16.
+        - Uses golden_section_min() from Step 3.
+        - Assumes a >= 1 and b >= 1, as specified.
+    """
+
+    # Validate the requested probability mass.
+    mass = float(mass)
+
+    if not math.isfinite(mass) or not (0.0 < mass < 1.0):
+        raise ValueError("mass must be strictly between 0 and 1.")
+
+    # Calculate the equal-tail probability.
+    tail = (1.0 - mass) / 2.0
+
+    # Calculate the central credible interval.
+    central_lower = beta_quantile(tail, a, b)
+    central_upper = beta_quantile(1.0 - tail, a, b)
+
+    # Define the interval width as a function of the lower-tail probability.
+    def interval_width(q):
+        lower = beta_quantile(q, a, b)
+        upper = beta_quantile(q + mass, a, b)
+        return upper - lower
+
+    # Find the lower-tail probability that minimizes the interval width.
+    q_opt = golden_section_min(
+        interval_width,
+        0.0,
+        1.0 - mass,
+        tol=1e-9
+    )
+
+    # Calculate the endpoints of the highest-density interval.
+    hdi_lower = beta_quantile(q_opt, a, b)
+    hdi_upper = beta_quantile(q_opt + mass, a, b)
+
+    # Return both credible intervals as Python float tuples.
+    return {
+        "central": (float(central_lower), float(central_upper)),
+        "hdi": (float(hdi_lower), float(hdi_upper))
+    }
+
