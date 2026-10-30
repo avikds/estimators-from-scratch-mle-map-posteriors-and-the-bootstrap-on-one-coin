@@ -25,6 +25,7 @@ python scaffold.py
 - [x] **13.** predictive_counts
 - [x] **14.** beta_cdf
 - [x] **15.** mixture_posterior
+- [x] **16.** beta_quantile
 
 ---
 

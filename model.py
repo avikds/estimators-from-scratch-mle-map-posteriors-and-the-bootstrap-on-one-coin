@@ -949,3 +949,60 @@ def mixture_posterior(weights, components, N1, N0):
 
     return post_weights, post_components
 
+# Step 16 - beta_quantile
+def beta_quantile(p, a, b):
+    """
+    Calculate the p-quantile of a Beta(a, b) distribution
+    by numerically inverting the Beta CDF using bisection.
+
+    Parameters:
+        p: Desired cumulative probability.
+        a: First positive Beta distribution parameter.
+        b: Second positive Beta distribution parameter.
+
+    Returns:
+        Python float representing the p-quantile.
+
+    Notes:
+        - Uses beta_cdf() from Step 14.
+        - Searches over the interval [0, 1].
+        - Performs at most 100 bisection iterations.
+        - Stops when the interval width is below 1e-13.
+    """
+
+    # Convert the probability to a Python float.
+    p = float(p)
+
+    # Handle boundary probabilities.
+    if p <= 0.0:
+        return 0.0
+
+    if p >= 1.0:
+        return 1.0
+
+    # Initialize the search interval.
+    lo = 0.0
+    hi = 1.0
+
+    # Perform bisection to invert the Beta CDF.
+    for _ in range(100):
+
+        # Stop when the interval is sufficiently small.
+        if hi - lo < 1e-13:
+            break
+
+        # Calculate the midpoint.
+        mid = (lo + hi) / 2.0
+
+        # Evaluate the Beta CDF at the midpoint.
+        cdf_mid = beta_cdf(mid, a, b)
+
+        # Maintain the bracket F(lo) < p <= F(hi).
+        if cdf_mid < p:
+            lo = mid
+        else:
+            hi = mid
+
+    # Return the midpoint of the final bracket.
+    return float((lo + hi) / 2.0)
+
