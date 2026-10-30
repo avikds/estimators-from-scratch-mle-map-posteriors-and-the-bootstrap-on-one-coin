@@ -16,6 +16,7 @@ python scaffold.py
 - [x] **4.** categorical_mle
 - [x] **5.** gaussian_mle
 - [x] **6.** map_bernoulli
+- [x] **7.** log_loss
 
 ---
 

@@ -277,3 +277,37 @@ def map_bernoulli(N1, N0, a, b):
 
     return float(theta_map)
 
+# Step 7 - log_loss
+def log_loss(p_heads, y):
+    """
+    Calculate the average negative log-likelihood (log loss)
+    of observed coin flips under a predicted heads probability.
+
+    Parameters:
+        p_heads: Predicted probability of heads.
+        y: One-dimensional array or list of future coin flips
+           (1 represents heads and 0 represents tails).
+
+    Returns:
+        Python float representing average log loss in nats per flip.
+
+    Raises:
+        ValueError: If y contains invalid flips or is empty.
+    """
+
+    # Validate the coin-flip observations and obtain sufficient statistics.
+    N1, N0 = coin_counts(y)
+
+    # Calculate the total number of observed flips.
+    N = N1 + N0
+
+    # Log loss is undefined when there are no observations.
+    if N == 0:
+        raise ValueError("Cannot calculate log loss for an empty flip sequence.")
+
+    # Calculate the total negative log-likelihood using the earlier function.
+    total_nll = bernoulli_nll(p_heads, N1, N0)
+
+    # Divide by the number of flips to obtain average log loss.
+    return float(total_nll / N)
+
