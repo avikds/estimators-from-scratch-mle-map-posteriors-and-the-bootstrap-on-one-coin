@@ -1753,3 +1753,47 @@ def interval_coverage(interval_fn, theta, N):
 
     return float(coverage)
 
+# Step 29 - bias_variance
+def bias_variance(estimator, theta, N):
+    """
+    Calculate the exact bias, variance, and mean squared error
+    of an estimator of the Bernoulli heads probability.
+
+    Parameters:
+        estimator: Function accepting (N1, N0) and returning
+                   an estimate of the heads probability.
+        theta: True probability of heads.
+        N: Number of independent coin flips.
+
+    Returns:
+        Tuple (bias, variance, mse), containing Python floats.
+
+        bias: Expected estimator value minus the true theta.
+        variance: Variance of the estimator.
+        mse: Mean squared error of the estimator.
+
+    Notes:
+        - Uses the exact sampling distribution from Step 26.
+        - Does not use simulation.
+    """
+
+    # Calculate the exact sampling distribution of the estimator.
+    values, pmf = sampling_distribution(estimator, theta, N)
+
+    # Calculate the expected value of the estimator.
+    expected_value = float(np.sum(values * pmf))
+
+    # Calculate the bias of the estimator.
+    bias = expected_value - theta
+
+    # Calculate the variance of the estimator.
+    variance = float(
+        np.sum(((values - expected_value) ** 2) * pmf)
+    )
+
+    # Calculate the mean squared error using the
+    # bias-variance decomposition.
+    mse = variance + bias ** 2
+
+    return (float(bias), float(variance), float(mse))
+

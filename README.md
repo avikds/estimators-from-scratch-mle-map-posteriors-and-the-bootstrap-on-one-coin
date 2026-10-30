@@ -38,6 +38,7 @@ python scaffold.py
 - [x] **26.** sampling_distribution
 - [x] **27.** wald_interval
 - [x] **28.** interval_coverage
+- [x] **29.** bias_variance
 
 ---
 
