@@ -36,6 +36,7 @@ python scaffold.py
 - [x] **24.** sample_tv
 - [x] **25.** bootstrap_mle
 - [x] **26.** sampling_distribution
+- [x] **27.** wald_interval
 
 ---
 

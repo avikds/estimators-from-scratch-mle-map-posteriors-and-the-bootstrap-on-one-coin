@@ -1676,3 +1676,43 @@ def sampling_distribution(estimator, theta, N):
 
     return values, pmf
 
+# Step 27 - wald_interval
+def wald_interval(N1, N0, z=1.96):
+    """
+    Calculate the Wald confidence interval for the Bernoulli
+    heads probability.
+
+    Parameters:
+        N1: Number of observed heads.
+        N0: Number of observed tails.
+        z: Normal critical value (default: 1.96).
+
+    Returns:
+        Tuple (lower, upper) containing Python floats.
+
+    Raises:
+        ValueError: If there are no observed flips.
+    """
+
+    # Calculate the total number of observations.
+    N = N1 + N0
+
+    # A confidence interval cannot be calculated without observations.
+    if N == 0:
+        raise ValueError("At least one flip is required.")
+
+    # Calculate the maximum likelihood estimate.
+    theta_hat = N1 / N
+
+    # Calculate the estimated standard error.
+    standard_error = math.sqrt(
+        theta_hat * (1.0 - theta_hat) / N
+    )
+
+    # Calculate the lower and upper confidence interval endpoints.
+    lower = theta_hat - z * standard_error
+    upper = theta_hat + z * standard_error
+
+    # Return the interval without clipping to [0, 1].
+    return (float(lower), float(upper))
+
