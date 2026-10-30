@@ -47,48 +47,40 @@ def coin_counts(y):
 # Step 2 - bernoulli_nll
 def bernoulli_nll(theta, N1, N0):
     """
-    Compute the negative log-likelihood of Bernoulli coin flips.
+    Compute the negative log-likelihood of Bernoulli observations.
 
-    Parameters
-    ----------
-    theta : float or numpy.ndarray
-        Probability of heads, in [0, 1].
-    N1 : int
-        Number of heads.
-    N0 : int
-        Number of tails.
+    Parameters:
+        theta: Heads probability (scalar or NumPy array).
+        N1: Number of heads.
+        N0: Number of tails.
 
-    Returns
-    -------
-    float or numpy.ndarray
-        Negative log-likelihood. Returns a Python float for scalar
-        input and a NumPy array for array input.
+    Returns:
+        Python float for scalar theta.
+        NumPy array for array-valued theta.
     """
 
-    # Convert theta to a NumPy array for element-wise computation.
-    theta_array = np.asarray(theta, dtype=float)
+    # Convert theta to a NumPy array for vectorized calculations.
+    theta = np.asarray(theta, dtype=float)
 
     # Initialize the negative log-likelihood with zeros.
-    nll = np.zeros_like(theta_array, dtype=float)
+    nll = np.zeros_like(theta, dtype=float)
 
-    # Suppress warnings when evaluating log(0) at boundary values.
-    with np.errstate(divide="ignore", invalid="ignore"):
+    # Calculate the heads contribution.
+    # Skip the term when N1 = 0 to implement 0 * log(0) = 0.
+    if N1 != 0:
+        with np.errstate(divide='ignore', invalid='ignore'):
+            nll -= N1 * np.log(theta)
 
-        # Contribution from heads.
-        # Skip the term when N1 = 0 (convention: 0 * log(0) = 0).
-        if N1 != 0:
-            nll -= N1 * np.log(theta_array)
-
-        # Contribution from tails.
-        # Skip the term when N0 = 0.
-        if N0 != 0:
-            nll -= N0 * np.log1p(-theta_array)
+    # Calculate the tails contribution.
+    # Skip the term when N0 = 0 to implement 0 * log(0) = 0.
+    if N0 != 0:
+        with np.errstate(divide='ignore', invalid='ignore'):
+            nll -= N0 * np.log1p(-theta)
 
     # Return a Python float for scalar input.
-    if np.isscalar(theta):
+    if theta.ndim == 0:
         return float(nll)
 
-    # Return a NumPy array for array input.
     return nll
 
 # Step 3 - golden_section_min
