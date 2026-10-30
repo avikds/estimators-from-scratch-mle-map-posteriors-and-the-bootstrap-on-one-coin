@@ -1350,3 +1350,88 @@ def laplace_logit(N1, N0, a, b):
         float(log_Z)
     )
 
+# Step 22 - metropolis
+def metropolis(log_target, x0, n_samples, step, rng):
+    """
+    Generate approximate samples using the Random-Walk Metropolis algorithm.
+
+    Parameters:
+        log_target: Unnormalized log-density function.
+        x0: Initial state of the Markov chain.
+        n_samples: Number of samples to generate.
+        step: Standard deviation of the Gaussian proposal distribution.
+        rng: NumPy random number generator.
+
+    Returns:
+        Tuple (samples, acceptance_rate), where:
+
+        samples:
+            NumPy float array containing the generated samples.
+
+        acceptance_rate:
+            Python float representing the fraction of accepted proposals.
+
+    Raises:
+        ValueError: If the initial state's log density is not finite.
+    """
+
+    # Convert the initial state to a Python float.
+    x = float(x0)
+
+    # Evaluate the initial log density exactly once.
+    current_log_target = log_target(x)
+
+    # The initial state must have a finite log density.
+    if not math.isfinite(current_log_target):
+        raise ValueError("The initial state's log density must be finite.")
+
+    # Initialize the array for storing generated samples.
+    samples = np.empty(n_samples, dtype=float)
+
+    # Track the number of accepted proposals.
+    accepted = 0
+
+    # Run the Random-Walk Metropolis sampler.
+    for i in range(n_samples):
+
+        # Step 1: Generate a Gaussian random-walk proposal.
+        proposal = x + step * rng.standard_normal()
+
+        # Step 2: Draw a uniform random number.
+        # This draw must occur even if the proposal is impossible.
+        u = rng.random()
+
+        # Step 3: Evaluate the proposed state's log density exactly once.
+        proposal_log_target = log_target(proposal)
+
+        # Calculate the log acceptance probability.
+        log_acceptance = min(
+            0.0,
+            proposal_log_target - current_log_target
+        )
+
+        # Calculate the acceptance probability.
+        acceptance_probability = math.exp(log_acceptance)
+
+        # Accept or reject the proposed state.
+        if u < acceptance_probability:
+
+            # Move the chain to the proposed state.
+            x = proposal
+
+            # Reuse the already calculated log density.
+            current_log_target = proposal_log_target
+
+            # Update the acceptance counter.
+            accepted += 1
+
+        # Step 4: Record the current state, whether moved or not.
+        samples[i] = x
+
+    # Calculate the fraction of accepted proposals.
+    acceptance_rate = (
+        float(accepted / n_samples) if n_samples > 0 else 0.0
+    )
+
+    return samples, acceptance_rate
+

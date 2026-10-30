@@ -31,6 +31,7 @@ python scaffold.py
 - [x] **19.** grid_posterior
 - [x] **20.** laplace_theta
 - [x] **21.** laplace_logit
+- [x] **22.** metropolis
 
 ---
 
