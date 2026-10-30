@@ -18,6 +18,7 @@ python scaffold.py
 - [x] **6.** map_bernoulli
 - [x] **7.** log_loss
 - [x] **8.** black_swan_risk
+- [x] **9.** beta_logpdf
 
 ---
 

@@ -398,3 +398,77 @@ def black_swan_risk(theta, n, n_future, n_rep, rng):
         "oracle_loss": oracle_loss
     }
 
+# Step 9 - beta_logpdf
+def log_beta(a, b):
+    """
+    Calculate the logarithm of the Beta function.
+
+    Parameters:
+        a: First positive Beta distribution parameter.
+        b: Second positive Beta distribution parameter.
+
+    Returns:
+        Python float representing log(B(a, b)).
+    """
+
+    # Calculate log Beta using the log Gamma function
+    # to avoid numerical overflow.
+    return float(math.lgamma(a) + math.lgamma(b) - math.lgamma(a + b))
+
+
+def beta_logpdf(theta, a, b):
+    """
+    Calculate the log probability density of a Beta distribution.
+
+    Parameters:
+        theta: Probability value (scalar or NumPy array).
+        a: First positive Beta distribution parameter.
+        b: Second positive Beta distribution parameter.
+
+    Returns:
+        Python float for scalar theta.
+        NumPy array for array-valued theta.
+
+    Notes:
+        - Uses the convention 0 * log(0) = 0.
+        - Returns -inf outside the interval [0, 1].
+        - Suppresses divide-by-zero and invalid-operation warnings.
+    """
+
+    # Convert theta into a NumPy array of floats.
+    theta = np.asarray(theta, dtype=float)
+
+    # Identify values inside the valid probability interval.
+    inside = (theta >= 0.0) & (theta <= 1.0)
+
+    # Replace invalid values temporarily to avoid unnecessary
+    # logarithm warnings. These values will ultimately become -inf.
+    safe_theta = np.where(inside, theta, 0.5)
+
+    # Initialize the log-density with zeros.
+    log_density = np.zeros_like(theta, dtype=float)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+
+        # First term: (a - 1) * log(theta).
+        # Skip it when a == 1 to correctly implement 0 * log(0) = 0.
+        if a != 1:
+            log_density += (a - 1) * np.log(safe_theta)
+
+        # Second term: (b - 1) * log(1 - theta).
+        # Skip it when b == 1 for the same boundary convention.
+        if b != 1:
+            log_density += (b - 1) * np.log1p(-safe_theta)
+
+    # Subtract the log Beta normalization constant.
+    log_density -= log_beta(a, b)
+
+    # Assign negative infinity to values outside [0, 1].
+    log_density = np.where(inside, log_density, -np.inf)
+
+    # Return a Python float for scalar input.
+    if theta.ndim == 0:
+        return float(log_density)
+
+    return log_density
+
