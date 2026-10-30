@@ -21,6 +21,7 @@ python scaffold.py
 - [x] **9.** beta_logpdf
 - [x] **10.** beta_posterior
 - [x] **11.** log_evidence
+- [x] **12.** sequential_predictive
 
 ---
 

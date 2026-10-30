@@ -573,3 +573,43 @@ def log_evidence(N1, N0, a, b, binomial=False):
 
     return float(evidence)
 
+# Step 12 - sequential_predictive
+def sequential_predictive(y, a, b):
+    """
+    Calculate sequential one-step-ahead predictive probabilities
+    for a sequence of Bernoulli coin flips.
+
+    Parameters:
+        y: One-dimensional array or list of coin flips (0 or 1).
+        a: First parameter of the Beta prior.
+        b: Second parameter of the Beta prior.
+
+    Returns:
+        NumPy float array where p[t] is the predictive probability
+        of heads before observing the flip at position t.
+
+    Notes:
+        - Uses coin_counts() to validate the observations.
+        - p[0] is the prior predictive probability.
+        - Each prediction uses only previously observed flips.
+        - An empty input returns an empty float array.
+    """
+
+    # Validate the coin-flip sequence using the earlier function.
+    coin_counts(y)
+
+    # Convert the validated observations into a float array.
+    y = np.asarray(y, dtype=float)
+
+    # Calculate the number of heads observed before each position.
+    # Subtracting the current observation excludes it from its own prediction.
+    heads_before = np.cumsum(y) - y
+
+    # Calculate the number of observations before each position.
+    t = np.arange(len(y), dtype=float)
+
+    # Calculate the sequential posterior predictive probabilities.
+    p = (a + heads_before) / (a + b + t)
+
+    return np.asarray(p, dtype=float)
+
